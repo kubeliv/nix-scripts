@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Function for the 'list' subcommand
+list() {
+    if [ $# -ne 1 ]; then
+        echo "Usage: $0 list <ssh host>"
+        exit 1
+    fi
+    ssh $1 nix profile history --profile /nix/var/nix/profiles/system
+}
+
+# Function for the 'prune' subcommand
+prune() {
+    if [ $# -ne 2 ]; then
+        echo "Usage: $0 prune <ssh host> <duration>"
+        exit 1
+    fi
+    ssh $1 sudo nix profile wipe-history --profile /nix/var/nix/profiles/system --older-than $2
+}
+
+# Function for the 'gc' subcommand
+gc() {
+    if [ $# -ne 1 ]; then
+        echo "Usage: $0 gc"
+        exit 1
+    fi
+    ssh $1 sudo nix store gc
+}
+
+# Main function to parse subcommands
+main() {
+    case "$1" in
+        list)
+            shift
+            list "$@"
+            ;;
+        prune)
+            shift
+            prune "$@"
+            ;;
+        gc)
+            shift
+            gc "$@"
+            ;;
+        *)
+            echo "Usage: $0 {list|prune|gc} <parameters>"
+            exit 1
+            ;;
+    esac
+}
+
+# Check if a subcommand is provided
+if [ $# -eq 0 ]; then
+    echo "Error: No subcommand provided"
+    echo "Usage: $0 {list|prune|gc} <parameters>"
+    exit 1
+fi
+
+# Call the main function with the provided subcommand
+main "$@"
+
